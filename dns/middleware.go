@@ -11,11 +11,11 @@ import (
 	D "github.com/miekg/dns"
 )
 
-type handler func(w D.ResponseWriter, r *D.Msg)
-type middleware func(next handler) handler
+type Handler func(w D.ResponseWriter, r *D.Msg)
+type middleware func(next Handler) Handler
 
 func withHosts(hosts *trie.DomainTrie) middleware {
-	return func(next handler) handler {
+	return func(next Handler) Handler {
 		return func(w D.ResponseWriter, r *D.Msg) {
 			q := r.Question[0]
 
@@ -61,7 +61,7 @@ func withHosts(hosts *trie.DomainTrie) middleware {
 }
 
 func withFakeIP(fakePool *fakeip.Pool) middleware {
-	return func(next handler) handler {
+	return func(next Handler) Handler {
 		return func(w D.ResponseWriter, r *D.Msg) {
 			q := r.Question[0]
 
@@ -104,7 +104,7 @@ func withFakeIP(fakePool *fakeip.Pool) middleware {
 	}
 }
 
-func withResolver(resolver *Resolver) handler {
+func withResolver(resolver *Resolver) Handler {
 	return func(w D.ResponseWriter, r *D.Msg) {
 		q := r.Question[0]
 
@@ -134,7 +134,7 @@ func withResolver(resolver *Resolver) handler {
 	}
 }
 
-func compose(middlewares []middleware, endpoint handler) handler {
+func compose(middlewares []middleware, endpoint Handler) Handler {
 	length := len(middlewares)
 	h := endpoint
 	for i := length - 1; i >= 0; i-- {
@@ -145,7 +145,7 @@ func compose(middlewares []middleware, endpoint handler) handler {
 	return h
 }
 
-func newHandler(resolver *Resolver) handler {
+func NewHandler(resolver *Resolver) Handler {
 	middlewares := []middleware{}
 
 	if resolver.hosts != nil {
