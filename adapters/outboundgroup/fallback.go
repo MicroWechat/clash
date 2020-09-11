@@ -16,6 +16,11 @@ type Fallback struct {
 	providers []provider.ProxyProvider
 }
 
+func (f *Fallback) GetProxyProviders() []provider.ProxyProvider {
+	return f.providers
+}
+
+
 func (f *Fallback) Now() string {
 	proxy := f.findAliveProxy()
 	return proxy.Name()
