@@ -17,6 +17,7 @@ type Pool struct {
 	offset  uint32
 	mux     sync.Mutex
 	host    *trie.DomainTrie
+	ipnet   *net.IPNet
 	cache   *cache.LruCache
 }
 
@@ -95,6 +96,16 @@ func (p *Pool) OverrideHostFrom(r *Pool) {
 }
 
 
+// IPNet return raw ipnet
+func (p *Pool) IPNet() *net.IPNet {
+	return p.ipnet
+}
+
+// PatchFrom clone cache from old pool
+func (p *Pool) PatchFrom(o *Pool) {
+	o.cache.CloneTo(p.cache)
+}
+
 func (p *Pool) get(host string) net.IP {
 	current := p.offset
 	for {
@@ -122,7 +133,7 @@ func ipToUint(ip net.IP) uint32 {
 }
 
 func uintToIP(v uint32) net.IP {
-	return net.IPv4(byte(v>>24), byte(v>>16), byte(v>>8), byte(v))
+	return net.IP{byte(v >> 24), byte(v >> 16), byte(v >> 8), byte(v)}
 }
 
 // New return Pool instance
@@ -142,6 +153,7 @@ func New(ipnet *net.IPNet, size int, host *trie.DomainTrie) (*Pool, error) {
 		max:     max,
 		gateway: min - 1,
 		host:    host,
+		ipnet:   ipnet,
 		cache:   cache.NewLRUCache(cache.WithSize(size * 2)),
 	}, nil
 }

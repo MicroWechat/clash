@@ -27,11 +27,6 @@ const (
 	LoadBalance
 )
 
-type ServerAdapter interface {
-	net.Conn
-	Metadata() *Metadata
-}
-
 type Connection interface {
 	Chains() Chain
 	AppendToChains(adapter ProxyAdapter)
@@ -47,6 +42,15 @@ func (c Chain) String() string {
 		return c[0]
 	default:
 		return fmt.Sprintf("%s[%s]", c[len(c)-1], c[0])
+	}
+}
+
+func (c Chain) Last() string {
+	switch len(c) {
+	case 0:
+		return ""
+	default:
+		return c[0]
 	}
 }
 
@@ -137,7 +141,7 @@ type UDPPacket interface {
 
 	// WriteBack writes the payload with source IP/Port equals addr
 	// - variable source IP/Port is important to STUN
-	// - if addr is not provided, WriteBack will wirte out UDP packet with SourceIP/Prot equals to origional Target,
+	// - if addr is not provided, WriteBack will write out UDP packet with SourceIP/Port equals to original Target,
 	//   this is important when using Fake-IP.
 	WriteBack(b []byte, addr net.Addr) (n int, err error)
 
